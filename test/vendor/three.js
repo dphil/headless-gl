@@ -24207,11 +24207,11 @@ THREE.UniformsUtils = {
 		var uniforms_dst = {};
 
 		for ( var u in uniforms_src ) {
-
+//console.log("clone: u = " + u)
 			uniforms_dst[ u ] = {};
 
 			for ( var p in uniforms_src[ u ] ) {
-
+//console.log("clone: u = " + u + "p = " + p)
 				var parameter_src = uniforms_src[ u ][ p ];
 
 				if ( parameter_src instanceof THREE.Color ||
@@ -24221,15 +24221,15 @@ THREE.UniformsUtils = {
 					 parameter_src instanceof THREE.Matrix3 ||
 					 parameter_src instanceof THREE.Matrix4 ||
 					 parameter_src instanceof THREE.Texture ) {
-
+console.log("clone params are instanceof")
 					uniforms_dst[ u ][ p ] = parameter_src.clone();
 
 				} else if ( Array.isArray( parameter_src ) ) {
-
+console.log("clone params are not instanceof ut is array")
 					uniforms_dst[ u ][ p ] = parameter_src.slice();
 
 				} else {
-
+console.log("setting dst uniforms to src")
 					uniforms_dst[ u ][ p ] = parameter_src;
 
 				}
@@ -33820,7 +33820,6 @@ Object.assign( THREE.EffectComposer.prototype, {
 	},
 
 	addPass: function ( pass ) {
-
 		this.passes.push( pass );
 
 		var size = this.renderer.getSize();
@@ -33839,19 +33838,22 @@ Object.assign( THREE.EffectComposer.prototype, {
 		var maskActive = false;
 
 		var pass, i, il = this.passes.length;
-
+//console.log('EffectComposer render 1');
 		for ( i = 0; i < il; i ++ ) {
-
+//console.log('EffectComposer render 2 ' + i);
 			pass = this.passes[ i ];
 
-			if ( pass.enabled === false ) continue;
+			if ( pass.enabled === false ) {
+//console.log('EffectComposer render ' + i + "pass disabled");
+				continue;
+			}
 
 			pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
 
 			if ( pass.needsSwap ) {
-
+//console.log('EffectComposer render ' + i + 'need swap');
 				if ( maskActive ) {
-
+//console.log('EffectComposer render ' + i + 'mask active');
 					var context = this.renderer.context;
 
 					context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
@@ -33867,13 +33869,13 @@ Object.assign( THREE.EffectComposer.prototype, {
 			}
 
 			if ( THREE.MaskPass !== undefined ) {
-
+//console.log('EffectComposer render ' + i + 'maskpass defined');
 				if ( pass instanceof THREE.MaskPass ) {
-
+//console.log('EffectComposer render 3 ' + i + 'pass is a maskpass');
 					maskActive = true;
 
 				} else if ( pass instanceof THREE.ClearMaskPass ) {
-
+//console.log('EffectComposer render 3 ' + i + 'pass is a clear maskpass');
 					maskActive = false;
 
 				}
@@ -34113,21 +34115,25 @@ Object.assign( THREE.ClearMaskPass.prototype, {
  */
 
 THREE.ShaderPass = function ( shader, textureID ) {
-
+	console.log("initial copyshader uniforms")
+console.log(shader.uniforms)
 	THREE.Pass.call( this );
 
 	this.textureID = ( textureID !== undefined ) ? textureID : "tDiffuse";
-
+console.log("ShaderPass constructor 1")
 	if ( shader instanceof THREE.ShaderMaterial ) {
-
+console.log("ShaderPass constructor: shader is instanceof ShaderMaterial")
 		this.uniforms = shader.uniforms;
 
 		this.material = shader;
 
 	} else if ( shader ) {
-
+console.log("ShaderPass constructor: shader is defined but not a shadermaterial")
+console.log("shader uniforms before clone:")
+console.log(shader.uniforms)
 		this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-
+		console.log("this.uniforms after clone:")
+console.log(this.uniforms)
 		this.material = new THREE.ShaderMaterial( {
 
 			defines: shader.defines || {},
@@ -34138,7 +34144,7 @@ THREE.ShaderPass = function ( shader, textureID ) {
 		} );
 
 	}
-
+console.log("ShaderPass constructor 2")
 	this.camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 	this.scene = new THREE.Scene();
 
@@ -34175,183 +34181,6 @@ THREE.ShaderPass.prototype = Object.assign( Object.create( THREE.Pass.prototype 
 
 } );
 
-// File:examples/js/postprocessing/EffectComposer.js
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-THREE.EffectComposer = function ( renderer, renderTarget ) {
-
-	this.renderer = renderer;
-
-	if ( renderTarget === undefined ) {
-
-		var parameters = {
-			minFilter: THREE.LinearFilter,
-			magFilter: THREE.LinearFilter,
-			format: THREE.RGBAFormat,
-			stencilBuffer: false
-		};
-		var size = renderer.getSize();
-		renderTarget = new THREE.WebGLRenderTarget( size.width, size.height, parameters );
-
-	}
-
-	this.renderTarget1 = renderTarget;
-	this.renderTarget2 = renderTarget.clone();
-
-	this.writeBuffer = this.renderTarget1;
-	this.readBuffer = this.renderTarget2;
-
-	this.passes = [];
-
-	if ( THREE.CopyShader === undefined )
-		console.error( "THREE.EffectComposer relies on THREE.CopyShader" );
-
-	this.copyPass = new THREE.ShaderPass( THREE.CopyShader );
-
-};
-
-Object.assign( THREE.EffectComposer.prototype, {
-
-	swapBuffers: function() {
-
-		var tmp = this.readBuffer;
-		this.readBuffer = this.writeBuffer;
-		this.writeBuffer = tmp;
-
-	},
-
-	addPass: function ( pass ) {
-
-		this.passes.push( pass );
-
-		var size = this.renderer.getSize();
-		pass.setSize( size.width, size.height );
-
-	},
-
-	insertPass: function ( pass, index ) {
-
-		this.passes.splice( index, 0, pass );
-
-	},
-
-	render: function ( delta ) {
-
-		var maskActive = false;
-
-		var pass, i, il = this.passes.length;
-
-		for ( i = 0; i < il; i ++ ) {
-
-			pass = this.passes[ i ];
-
-			if ( pass.enabled === false ) continue;
-
-			pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
-
-			if ( pass.needsSwap ) {
-
-				if ( maskActive ) {
-
-					var context = this.renderer.context;
-
-					context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
-
-					this.copyPass.render( this.renderer, this.writeBuffer, this.readBuffer, delta );
-
-					context.stencilFunc( context.EQUAL, 1, 0xffffffff );
-
-				}
-
-				this.swapBuffers();
-
-			}
-
-			if ( THREE.MaskPass !== undefined ) {
-
-				if ( pass instanceof THREE.MaskPass ) {
-
-					maskActive = true;
-
-				} else if ( pass instanceof THREE.ClearMaskPass ) {
-
-					maskActive = false;
-
-				}
-
-			}
-
-		}
-
-	},
-
-	reset: function ( renderTarget ) {
-
-		if ( renderTarget === undefined ) {
-
-			var size = this.renderer.getSize();
-
-			renderTarget = this.renderTarget1.clone();
-			renderTarget.setSize( size.width, size.height );
-
-		}
-
-		this.renderTarget1.dispose();
-		this.renderTarget2.dispose();
-		this.renderTarget1 = renderTarget;
-		this.renderTarget2 = renderTarget.clone();
-
-		this.writeBuffer = this.renderTarget1;
-		this.readBuffer = this.renderTarget2;
-
-	},
-
-	setSize: function ( width, height ) {
-
-		this.renderTarget1.setSize( width, height );
-		this.renderTarget2.setSize( width, height );
-
-		for ( var i = 0; i < this.passes.length; i ++ ) {
-
-			this.passes[i].setSize( width, height );
-
-		}
-
-	}
-
-} );
-
-
-THREE.Pass = function () {
-
-	// if set to true, the pass is processed by the composer
-	this.enabled = true;
-
-	// if set to true, the pass indicates to swap read and write buffer after rendering
-	this.needsSwap = true;
-
-	// if set to true, the pass clears its buffer before rendering
-	this.clear = false;
-
-	// if set to true, the result of the pass is rendered to screen
-	this.renderToScreen = false;
-
-};
-
-Object.assign( THREE.Pass.prototype, {
-
-	setSize: function( width, height ) {},
-
-	render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
-
-		console.error( "THREE.Pass: .render() must be implemented in derived pass." );
-
-	}
-
-} );
 
 // File:src/extras/CurveUtils.js
 
