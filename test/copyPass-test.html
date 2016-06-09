@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset=utf-8>
+	<title>My first Three.js app</title>
+	<style>
+	body { margin: 0; }
+	canvas { width: 100%; height: 100% }
+	</style>
+	<script src="util/webgl-debug.js"></script>
+	<script src="vendor/three.js"></script>
+	<script type="text/javascript">
+
+
+
+	function init() {
+		var loud = console.log
+		var quiet = function (){}
+		// Init GL
+
+		function logGLCall(functionName, args) {
+			console.log("gl." + functionName + "(" + WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+		}
+		function validateNoneOfTheArgsAreUndefined(functionName, args) {
+			for (var ii = 0; ii < args.length; ++ii) {
+				if (args[ii] === undefined) {
+					console.error("undefined passed to gl." + functionName + "(" +
+					WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+				}
+			}
+		}
+		function logAndValidate(functionName, args) {
+			logGLCall(functionName, args);
+			validateNoneOfTheArgsAreUndefined (functionName, args);
+		}
+
+		var surface = document.getElementById('rendering-surface');
+		var width = surface.width
+		var height = surface.height
+
+		var original_gl = surface.getContext('webgl');
+		var debug_log_gl = WebGLDebugUtils.makeDebugContext(original_gl, undefined, logAndValidate);
+		var debug_errors_gl = WebGLDebugUtils.makeDebugContext(original_gl);
+		var gl = debug_log_gl // specify which gl program will use
+
+
+		// Set up scene
+
+		var    scene = new THREE.Scene();
+		var camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+		camera.position.z = 5;
+
+		var geometry = new THREE.BoxGeometry( 10, 10, 1 );
+		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+
+		var cube = new THREE.Mesh( geometry, material );
+		scene.add( cube );
+
+console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP WEBGLRENDER ***********************************")
+//console.log = quiet
+		// Set up renderer
+
+		var renderer = new THREE.WebGLRenderer({context: gl, canvas: surface });
+		renderer.setSize( width, height );
+
+console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP EFFECTCOMPOSER ***********************************")
+		// Set up effects
+		var composer = new THREE.EffectComposer(renderer);
+				composer.setSize(width, height);
+
+console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP RENDERPASS ***********************************")
+		var renderPass = new THREE.RenderPass(scene, camera);
+		renderPass.renderToScreen = false;
+		composer.addPass(renderPass);
+
+console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP COPYPASS ***********************************")
+		var copyPass = new THREE.ShaderPass( THREE.CopyShader );
+		copyPass.renderToScreen = true;
+		composer.addPass(copyPass);
+
+
+		// Render Effects
+
+console.log("\n\n\n\n\n\n\n\n\n\n ******************************* RENDERING COMPOSER ***********************************")
+		composer.render();
+
+
+		// Check output pixels
+
+		function checkPixels () {
+			var pixels = new Uint8Array(4 * width * height)
+
+			gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+
+			for (var i = 0; i < width * height * 4; i += 4) {
+				var r = pixels[i]
+				var g = pixels[i + 1]
+				var b = pixels[i + 2]
+				var a = pixels[i + 3]
+				//      t.equals(r, 255, 'red')
+				//      t.equals(g, 255, 'green')
+				//      t.equals(b, 255, 'blue')
+				//      t.equals(a, 255, 'alpha')
+				console.log(r, g, b, a)
+			}
+		}
+
+//		checkPixels()
+	}
+
+	</script>
+</head>
+<body onLoad="init()">
+	<canvas id="rendering-surface" height="4" width="4"/>
+</body>
+</html>

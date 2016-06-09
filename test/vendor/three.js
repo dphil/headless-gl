@@ -24207,11 +24207,9 @@ THREE.UniformsUtils = {
 		var uniforms_dst = {};
 
 		for ( var u in uniforms_src ) {
-//console.log("clone: u = " + u)
 			uniforms_dst[ u ] = {};
 
 			for ( var p in uniforms_src[ u ] ) {
-//console.log("clone: u = " + u + "p = " + p)
 				var parameter_src = uniforms_src[ u ][ p ];
 
 				if ( parameter_src instanceof THREE.Color ||
@@ -24221,27 +24219,17 @@ THREE.UniformsUtils = {
 					 parameter_src instanceof THREE.Matrix3 ||
 					 parameter_src instanceof THREE.Matrix4 ||
 					 parameter_src instanceof THREE.Texture ) {
-console.log("clone params are instanceof")
 					uniforms_dst[ u ][ p ] = parameter_src.clone();
 
 				} else if ( Array.isArray( parameter_src ) ) {
-console.log("clone params are not instanceof ut is array")
 					uniforms_dst[ u ][ p ] = parameter_src.slice();
-
 				} else {
-console.log("setting dst uniforms to src")
 					uniforms_dst[ u ][ p ] = parameter_src;
-
 				}
-
 			}
-
 		}
-
 		return uniforms_dst;
-
 	}
-
 };
 
 // File:src/renderers/shaders/UniformsLib.js
@@ -29969,7 +29957,7 @@ THREE.WebGLState = function ( gl, extensions, paramThreeToGL ) {
 
 	function createTexture( type, target, count ) {
 
-		var data = new Uint8Array( 3 );
+		var data = new Uint8Array( 4 );
 		var texture = gl.createTexture();
 
 		gl.bindTexture( type, texture );
@@ -29978,7 +29966,7 @@ THREE.WebGLState = function ( gl, extensions, paramThreeToGL ) {
 
 		for ( var i = 0; i < count; i ++ ) {
 
-			gl.texImage2D( target + i, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, data );
+			gl.texImage2D( target + i, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, data );
 
 		}
 
@@ -33838,22 +33826,22 @@ Object.assign( THREE.EffectComposer.prototype, {
 		var maskActive = false;
 
 		var pass, i, il = this.passes.length;
-//console.log('EffectComposer render 1');
+
 		for ( i = 0; i < il; i ++ ) {
-//console.log('EffectComposer render 2 ' + i);
+
 			pass = this.passes[ i ];
 
 			if ( pass.enabled === false ) {
-//console.log('EffectComposer render ' + i + "pass disabled");
+
 				continue;
 			}
 
 			pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
 
 			if ( pass.needsSwap ) {
-//console.log('EffectComposer render ' + i + 'need swap');
+
 				if ( maskActive ) {
-//console.log('EffectComposer render ' + i + 'mask active');
+
 					var context = this.renderer.context;
 
 					context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
@@ -33869,13 +33857,12 @@ Object.assign( THREE.EffectComposer.prototype, {
 			}
 
 			if ( THREE.MaskPass !== undefined ) {
-//console.log('EffectComposer render ' + i + 'maskpass defined');
+
 				if ( pass instanceof THREE.MaskPass ) {
-//console.log('EffectComposer render 3 ' + i + 'pass is a maskpass');
+
 					maskActive = true;
 
 				} else if ( pass instanceof THREE.ClearMaskPass ) {
-//console.log('EffectComposer render 3 ' + i + 'pass is a clear maskpass');
 					maskActive = false;
 
 				}
@@ -34115,25 +34102,21 @@ Object.assign( THREE.ClearMaskPass.prototype, {
  */
 
 THREE.ShaderPass = function ( shader, textureID ) {
-	console.log("initial copyshader uniforms")
-console.log(shader.uniforms)
+
 	THREE.Pass.call( this );
 
 	this.textureID = ( textureID !== undefined ) ? textureID : "tDiffuse";
-console.log("ShaderPass constructor 1")
+
 	if ( shader instanceof THREE.ShaderMaterial ) {
-console.log("ShaderPass constructor: shader is instanceof ShaderMaterial")
+
 		this.uniforms = shader.uniforms;
 
 		this.material = shader;
 
 	} else if ( shader ) {
-console.log("ShaderPass constructor: shader is defined but not a shadermaterial")
-console.log("shader uniforms before clone:")
-console.log(shader.uniforms)
+
 		this.uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-		console.log("this.uniforms after clone:")
-console.log(this.uniforms)
+
 		this.material = new THREE.ShaderMaterial( {
 
 			defines: shader.defines || {},
@@ -34144,7 +34127,7 @@ console.log(this.uniforms)
 		} );
 
 	}
-console.log("ShaderPass constructor 2")
+
 	this.camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 	this.scene = new THREE.Scene();
 
