@@ -41,7 +41,7 @@
 		var original_gl = surface.getContext('webgl');
 		var debug_log_gl = WebGLDebugUtils.makeDebugContext(original_gl, undefined, logAndValidate);
 		var debug_errors_gl = WebGLDebugUtils.makeDebugContext(original_gl);
-		var gl = debug_log_gl // specify which gl program will use
+		var gl = debug_errors_gl // specify which gl program will use
 
 
 		// Set up scene
@@ -65,7 +65,14 @@ console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP WEB
 
 console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP EFFECTCOMPOSER ***********************************")
 		// Set up effects
-		var composer = new THREE.EffectComposer(renderer);
+		var target = new THREE.WebGLRenderTarget(
+		    width, height, {
+		        minFilter: THREE.LinearFilter,
+		        magFilter: THREE.NearestFilter,
+		        format: THREE.RGBFormat
+		})
+
+		var composer = new THREE.EffectComposer(renderer, target);
 				composer.setSize(width, height);
 
 console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP RENDERPASS ***********************************")
@@ -105,7 +112,7 @@ console.log("\n\n\n\n\n\n\n\n\n\n ******************************* RENDERING COMP
 			}
 		}
 
-//		checkPixels()
+		checkPixels()
 	}
 
 	</script>

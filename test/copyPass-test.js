@@ -32,7 +32,7 @@ var height = 4
 var original_gl = createContext(width, height)
 var debug_log_gl = webglDebug.makeDebugContext(original_gl, undefined, logAndValidate);
 var debug_errors_gl = webglDebug.makeDebugContext(original_gl);
-gl = debug_log_gl // specify which gl program will use
+var gl = debug_errors_gl // specify which gl program will use
 
 
 
@@ -70,7 +70,14 @@ renderer.clear()
 console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP EFFECTCOMPOSER ***********************************")
 // Set up effects
 
-var composer = new THREE.EffectComposer(renderer)
+var target = new THREE.WebGLRenderTarget(
+    width, height, {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.NearestFilter,
+        format: THREE.RGBFormat
+})
+
+var composer = new THREE.EffectComposer(renderer, target)
 composer.setSize(width, height)
 
 console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP RENDERPASS ***********************************")
@@ -79,9 +86,9 @@ renderPass.renderToScreen = false
 composer.addPass(renderPass)
 
 console.log("\n\n\n\n\n\n\n\n\n\n ******************************* SETTING UP COPYPASS ***********************************")
-// var copyPass = new THREE.ShaderPass(THREE.CopyShader)
-// copyPass.renderToScreen = true
-// composer.addPass(copyPass)
+var copyPass = new THREE.ShaderPass(THREE.CopyShader)
+copyPass.renderToScreen = true
+composer.addPass(copyPass)
 
 
 // Render Effects

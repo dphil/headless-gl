@@ -86,7 +86,7 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
 
 // Render to the texture (using clear because it's simple)
-gl.clearColor(0, 1, 0, 1); // green;
+gl.clearColor(0, 1, 0); // green;
 gl.clear(gl.COLOR_BUFFER_BIT);
 //
 gl.activeTexture(gl.TEXTURE0);
