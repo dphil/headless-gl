@@ -271,26 +271,28 @@ function precheckFramebufferStatus (framebuffer) {
   var depthAttachment = attachments[gl.DEPTH_ATTACHMENT]
   var depthStencilAttachment = attachments[gl.DEPTH_STENCIL_ATTACHMENT]
   var stencilAttachment = attachments[gl.STENCIL_ATTACHMENT]
-
+//console.log("precheckFramebufferStatus 1")
   if (depthStencilAttachment && (stencilAttachment || depthAttachment) ||
       (stencilAttachment && depthAttachment)) {
     return gl.FRAMEBUFFER_UNSUPPORTED
   }
-
+//console.log("precheckFramebufferStatus 2")
   if (!colorAttachment) {
     return gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
   }
-
+//console.log("precheckFramebufferStatus 3")
   if (depthStencilAttachment instanceof WebGLTexture) {
+    console.log("precheckFramebufferStatus 4")
     return gl.FRAMEBUFFER_UNSUPPORTED
   } else if (depthStencilAttachment instanceof WebGLRenderbuffer) {
     if (depthStencilAttachment._format !== gl.DEPTH_STENCIL) {
+      console.log("precheckFramebufferStatus 5")
       return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
     }
     width.push(depthStencilAttachment._width)
     height.push(depthStencilAttachment._height)
   }
-
+//console.log("precheckFramebufferStatus 6")
   if (depthAttachment instanceof WebGLTexture) {
     return gl.FRAMEBUFFER_UNSUPPORTED
   } else if (depthAttachment instanceof WebGLRenderbuffer) {
@@ -300,7 +302,7 @@ function precheckFramebufferStatus (framebuffer) {
     width.push(depthAttachment._width)
     height.push(depthAttachment._height)
   }
-
+//console.log("precheckFramebufferStatus 7")
   if (stencilAttachment instanceof WebGLTexture) {
     return gl.FRAMEBUFFER_UNSUPPORTED
   } else if (stencilAttachment instanceof WebGLRenderbuffer) {
@@ -310,26 +312,31 @@ function precheckFramebufferStatus (framebuffer) {
     width.push(stencilAttachment._width)
     height.push(stencilAttachment._height)
   }
-
+//console.log("precheckFramebufferStatus 8")
   if (colorAttachment instanceof WebGLTexture) {
-    if (colorAttachment._format !== gl.RGBA ||
-        colorAttachment._type !== gl.UNSIGNED_BYTE) {
-      return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
-    }
+    // if (colorAttachment._format !== gl.RGBA ||
+    //     colorAttachment._type !== gl.UNSIGNED_BYTE) {
+    //       console.log("precheckFramebufferStatus 8.1")
+    //       if (colorAttachment._format !== gl.RGBA)
+    //       console.log("color attachment format is not RGBA")
+    //       if (colorAttachment._type !== gl.UNSIGNED_BYTE)
+    //       console.log("color attachment type is not UNSIGNED_BYTE")
+    //   return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+    // }
     var level = framebuffer._attachmentLevel[gl.COLOR_ATTACHMENT0]
     width.push(colorAttachment._levelWidth[level])
     height.push(colorAttachment._levelHeight[level])
   } else if (colorAttachment instanceof WebGLRenderbuffer) {
-    var format = colorAttachment._format
-    if (format !== gl.RGBA4 &&
-      format !== gl.RGB565 &&
-      format !== gl.RGB5_A1) {
-      return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
-    }
+    // var format = colorAttachment._format
+    // if (format !== gl.RGBA4 &&
+    //   format !== gl.RGB565 &&
+    //   format !== gl.RGB5_A1) {
+    //   return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+    //}
     width.push(colorAttachment._width)
     height.push(colorAttachment._height)
   }
-
+//console.log("precheckFramebufferStatus 9")
   if (!colorAttachment &&
       !stencilAttachment &&
       !depthAttachment &&
@@ -354,7 +361,7 @@ function precheckFramebufferStatus (framebuffer) {
 
   framebuffer._width = width[0]
   framebuffer._height = height[0]
-
+//console.log("precheckframebufferstatus 10")
   return gl.FRAMEBUFFER_COMPLETE
 }
 
@@ -362,6 +369,7 @@ function framebufferOk (context) {
   var framebuffer = context._activeFramebuffer
   if (framebuffer &&
     precheckFramebufferStatus(framebuffer) !== gl.FRAMEBUFFER_COMPLETE) {
+      //console.log("precheckFrameBufferStatus failed")
     setError(context, gl.INVALID_FRAMEBUFFER_OPERATION)
     return false
   }
@@ -1416,9 +1424,12 @@ gl.checkFramebufferStatus = function checkFramebufferStatus (target) {
 
 var _clear = gl.clear
 gl.clear = function clear (mask) {
+//  console.log("check framebuffer")
   if (!framebufferOk(this)) {
+//    console.log("Framebuffer NOT OK")
     return
   }
+//  console.log("Framebuffer OK")
   return _clear.call(this, mask | 0)
 }
 

@@ -3,9 +3,12 @@ var THREE = require('./vendor/three.js')
 var webglDebug = require('webgl-debug')
 var png = require('pngjs').PNG;
 var fs = require('fs');
+var superagent = require('superagent');
+var Canvas = require('canvas');
+const { Image } = Canvas;
 
-var width = 1000
-var height = 1000
+var width = 1
+var height = 1
 
 var path = 'out.png';
 img = new png({width: width, height: height});
@@ -32,7 +35,7 @@ function logAndValidate(functionName, args) {
 var original_gl = createContext(width, height)
 var debug_log_gl = webglDebug.makeDebugContext(original_gl, undefined, logAndValidate);
 var debug_errors_gl = webglDebug.makeDebugContext(original_gl);
-gl = debug_errors_gl
+gl = original_gl
 
 
 
@@ -51,10 +54,17 @@ var hdrCubeMap;
 var composer;
 var standardMaterial, floorMaterial;
 var ldrCubeRenderTarget, hdrCubeRenderTarget, rgbmCubeRenderTarget;
+var rgbmUrls, ldrUrls, rgbmCubeMap;
 
 init();
+for (var m = 0; m < 1000000000; m++){}
 render();
+console.log(rgbmCubeMap.image[0])
+render()
 writeToFile();
+console.log("Done writing to file")
+
+
 
 function init() {
 
@@ -128,7 +138,7 @@ function init() {
   // 	pmremCubeUVPacker.update( renderer );
   // 	hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
   // } );
-  // var ldrUrls = genCubeUrls( "./textures/cube/pisa/", ".png" );
+  ldrUrls = genCubeUrls( "localhost:8000/test/files/pisa/", ".png" );
   // new THREE.CubeTextureLoader().load( ldrUrls, function ( ldrCubeMap ) {
   // 	ldrCubeMap.encoding = THREE.GammaEncoding;
   // 	var pmremGenerator = new THREE.PMREMGenerator( ldrCubeMap );
@@ -137,7 +147,9 @@ function init() {
   // 	pmremCubeUVPacker.update( renderer );
   // 	ldrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
   // } );
-  // var rgbmUrls = genCubeUrls( "./textures/cube/pisaRGBM16/", ".png" );
+  rgbmUrls = genCubeUrls( "localhost:8000/test/files/pisaRGBM16/", ".png" );
+  //  http://localhost:8000/test/files/pisaRGBM16/
+
   // new THREE.CubeTextureLoader().load( rgbmUrls, function ( rgbmCubeMap ) {
   // 	rgbmCubeMap.encoding = THREE.RGBM16Encoding;
   // 	var pmremGenerator = new THREE.PMREMGenerator( rgbmCubeMap );
@@ -146,6 +158,44 @@ function init() {
   // 	pmremCubeUVPacker.update( renderer );
   // 	rgbmCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
   // } );
+
+
+
+
+  rgbmCubeMap = new THREE.CubeTexture();
+  rgbmCubeMap.images = []
+
+  //  function successCB(pixels){console.log("successcb"); writeTextureToFile(pixels)}
+  function successCB(pixels){
+  //  console.log("successcb");
+    rgbmCubeMap.images.push(pixels)
+    console.log("pushing")
+//    console.log(pixels)
+  }
+  function failCB(){}
+
+  for (var i = 0; i < 6; i++)
+  {
+    fetchNext(rgbmUrls[i], successCB);
+  }
+
+
+  console.log(rgbmCubeMap.image[0])
+
+  rgbmCubeMap.needsUpdate = true;
+  rgbmCubeMap.encoding = THREE.RGBM16Encoding;
+  console.log("test 1")
+  var pmremGenerator = new THREE.PMREMGenerator( rgbmCubeMap );
+  console.log("test 2")
+  pmremGenerator.update( renderer );
+  console.log("test 3")
+  var pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( pmremGenerator.cubeLods );
+  console.log("test 4")
+  pmremCubeUVPacker.update( renderer );
+  console.log("test 5")
+  rgbmCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
+
+
   // Lights
   scene.add( new THREE.AmbientLight( 0x222222 ) );
   var spotLight = new THREE.SpotLight( 0xffffff );
@@ -154,7 +204,7 @@ function init() {
   spotLight.penumbra = 0.8
   spotLight.castShadow = true;
   scene.add( spotLight );
-  renderer.setPixelRatio( window.devicePixelRatio );
+  //  renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( width, height, false);
   renderer.shadowMap.enabled = true;
 
@@ -176,6 +226,7 @@ function init() {
 //
 
 function render() {
+  console.log("Render start")
   if ( standardMaterial !== undefined ) {
     standardMaterial.roughness = params.roughness;
     standardMaterial.reflectivity = params.reflectivity;
@@ -236,4 +287,99 @@ function writeToFile() {
   // Now write the png to disk
   stream = fs.createWriteStream(path);
   img.pack().pipe(stream);
+}
+
+function writeTextureToFile(pixels) {
+  // create a pixel buffer of the correct size
+  //  pixels = new Uint8ClampedArray(4 * width * height);
+
+  // read back in the pixel buffer
+  //  gl.bindFramebuffer( gl.FRAMEBUFFER, null );
+
+
+  //  gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+  // lines are vertically flipped in the FBO / need to unflip them
+  // for (var j=0; j <= height; j++) {
+  //   for (var i=0; i <= width; i++) {
+  //     k = j * width + i;
+  //     r = pixels[4*k];
+  //     g = pixels[4*k + 1];
+  //     b = pixels[4*k + 2];
+  //     a = pixels[4*k + 3];
+  //
+  //     m = (height - j + 1) * width + i;
+  //     img.data[4*m]     = r;
+  //     img.data[4*m + 1] = g;
+  //     img.data[4*m + 2] = b;
+  //     img.data[4*m + 3] = a;
+  //     console.log("r,g,b,a = " + r,g,b,a)
+  //   }
+  // }
+
+
+  for (var i = 0; i < width * height * 4; i += 4) {
+    var r = pixels[i]
+    var g = pixels[i + 1]
+    var b = pixels[i + 2]
+    var a = pixels[i + 3]
+    //      t.equals(r, 255, 'red')
+    //      t.equals(g, 255, 'green')
+    //      t.equals(b, 255, 'blue')
+    //      t.equals(a, 255, 'alpha')
+    //  console.log(r, g, b, a)
+  }
+
+  // Now write the png to disk
+  // stream = fs.createWriteStream(path);
+  // img.pack().pipe(stream);
+}
+
+
+
+
+
+// console.log(rgbmUrls[0]);
+// console.log(rgbmUrls.slice(1));
+//fetchNext(ldrUrls[0], ldrUrls.slice(1), successCB, failCB, {contentType : 'img'});
+
+
+
+
+
+
+function fetchNext(url, success) {
+
+  function binaryParser(callback) {
+    return function(res) {
+      var data = '';
+      res.setEncoding('binary');
+      res.on('data', function(chunk) {
+        data += chunk;
+      });
+      res.on('end', function() {
+        callback(new Buffer(data, 'binary'));
+      });
+    }
+  };
+
+  var req = superagent.get(url);
+
+  req.parse(binaryParser(function(buf) {
+console.log("parse 1")
+    var img = new Image();
+    img.src = buf;
+    var canvas = new Canvas(img.width, img.height);
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, img.width, img.height);
+    var imgData = ctx.getImageData(0, 0, img.width, img.height);
+    success(imgData);
+//    console.log(imgData)
+
+    //      console.log(imgData)
+  }));
+  req.end(function(err, res) {
+    if (err) console.log(err);
+  })
+
 }
