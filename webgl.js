@@ -2235,11 +2235,13 @@ function updateFramebufferAttachments (framebuffer) {
       0,
       0)
   }
-
+//console.log("webGL.js updateFramebufferAttachments 1")
   for (i = 0; i < ATTACHMENTS.length; ++i) {
     var attachmentEnum = ATTACHMENTS[i]
     var attachment = framebuffer._attachments[attachmentEnum]
     if (attachment instanceof WebGLTexture) {
+      // console.log("glError 1 = " + ctx.getError());
+      // console.log("framebuffer bound = " + gl.FRAMEBUFFER)
       _framebufferTexture2D.call(
         ctx,
         gl.FRAMEBUFFER,
@@ -2247,6 +2249,10 @@ function updateFramebufferAttachments (framebuffer) {
         gl.TEXTURE_2D,
         attachment._ | 0,
         framebuffer._attachmentLevel[attachmentEnum])
+        // console.log("attachment level: " + framebuffer._attachmentLevel[attachmentEnum])
+        // console.log("attachment : " + (attachment._ | 0))
+        // console.log(attachment)
+        // console.log("glError 2 = " + ctx.getError());
     } else if (attachment instanceof WebGLRenderbuffer) {
       _framebufferRenderbuffer.call(
         ctx,
@@ -2256,6 +2262,7 @@ function updateFramebufferAttachments (framebuffer) {
         attachment._ | 0)
     }
   }
+//  console.log("webGL.js updateFramebufferAttachments 2")
 }
 
 var _framebufferRenderbuffer = gl.framebufferRenderbuffer
