@@ -22,7 +22,7 @@ tape('cube map', function (t) {
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
 
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 1; i++) {
     gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, img)
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, tex, 0)
   }
